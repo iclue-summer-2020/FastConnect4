@@ -130,6 +130,7 @@ def run():
 	if number_cores == 0: number_cores = multiprocessing.cpu_count()
 	pool = multiprocessing.Pool(number_cores)
 	number_runs = int(input("Enter number of trials per core: "))
+	start = time.time()
 	for _ in range(number_runs):
 		pool.apply_async(get_possible_position_vector, args = (), callback = process_result)
 	pool.close()
@@ -142,6 +143,8 @@ def run():
 	print("Average game length (actual): ", temp/N)
 	print("P1 wins: ", p1wins/N)
 	print("P2 wins: ", p2wins/N)
+	print("Total number of games: ", N)
+	print("Time elapsed: ", time.time()-start)
 def test():
 	pass
 
