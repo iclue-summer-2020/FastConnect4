@@ -31,8 +31,10 @@ Y = RandomVariable(100) # used to calculate game length
 Z = RandomVariable(100) # used to calculate draw rate
 P1 = RandomVariable(100) # used to calculate p1 win rate
 P2 = RandomVariable(100) # used to calculate p2 win rate
-
-
+N = 0
+temp = 0
+p1wins = 0
+p2wins = 0
 # Rotate let and rotate right functions from https://falatic.com/index.php/108/python-and-bitwise-rotation
 def rotate_left(val, r_bits, max_bits=64):
 	return (val << r_bits%max_bits) & (2**max_bits-1) | \
@@ -51,7 +53,7 @@ def bitboard_to_arr(bitboard):
 	return np.flip(np.array([int(i) for i in bin(bitboard)[2:].zfill(63)]).reshape((9,7)).transpose(),axis=1)[:-1,:-2]
 
 # Implementation of bitboard from https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
-FULL_BOARD = 279258638311359
+FULL_BOARD = 558517276622718
 class Connect4Game:
 	def __init__(self):
 		self.bitboards = [0,0]
@@ -109,13 +111,20 @@ def process_result(results):
 	global Z
 	global P1
 	global P2
+	global N
+	global temp
+	global p1wins
+	global p2wins
 	product, winner, moves = results
 	X.update(product)
 	Y.update(product*len(moves))
 	Z.update(product*1 if winner=="tie" else 0)
 	P1.update(product*1 if winner=="player 1" else 0)
 	P2.update(product*1 if winner=="player 2" else 0)
-
+	N += 1
+	temp += len(moves)
+	if winner == "player 1": p1wins += 1
+	if winner == "player 2": p2wins += 1
 def run():
 	number_cores = int(input("Enter number of cores (0 to use all): "))
 	if number_cores == 0: number_cores = multiprocessing.cpu_count()
@@ -130,3 +139,25 @@ def run():
 	print("Draw rate: ", Z.get_mean() / X.get_mean())
 	print("P1 win rate: ", P1.get_mean() / X.get_mean())
 	print("P2 win rate: ", P2.get_mean() / X.get_mean())
+	print("Average game length (actual): ", temp/N)
+	print("P1 wins: ", p1wins/N)
+	print("P2 wins: ", p2wins/N)
+def test():
+	pass
+
+def get_game():
+	game = Connect4Game()
+	while True:
+		try:
+			game.make_move(random.randrange(7))
+		except:
+			break
+	return game
+
+"""
+moves = [3, 3, 0, 2, 4, 3, 5, 2, 1, 2, 1, 6, 4, 4, 2, 4, 3, 5, 1, 3, 1]
+temp = Connect4Game()
+for i in moves:
+	temp.make_move(i)
+
+"""

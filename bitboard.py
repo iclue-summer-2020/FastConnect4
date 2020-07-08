@@ -70,4 +70,5 @@ def get_possible_position_vector():
 			break
 	return (game.possible_move_vector, game.get_win(), game.moves)
 
-a = [get_possible_position_vector() for i in range(500)]
+import cProfile
+cProfile.run("[get_possible_position_vector() for i in range(500)]")
