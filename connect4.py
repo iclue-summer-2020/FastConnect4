@@ -6,6 +6,8 @@ from math import sqrt
 import multiprocessing
 import time
 from collections import Counter
+from tqdm import tqdm
+import sys
 
 product = lambda arr: reduce(lambda a,b: a*b, arr)
 
@@ -36,6 +38,8 @@ N = 0
 temp = 0
 p1wins = 0
 p2wins = 0
+# Progress bar
+pbar = None
 # Rotate let and rotate right functions from https://falatic.com/index.php/108/python-and-bitwise-rotation
 def rotate_left(val, r_bits, max_bits=64):
 	return (val << r_bits%max_bits) & (2**max_bits-1) | \
@@ -116,6 +120,8 @@ def process_result(results):
 	global temp
 	global p1wins
 	global p2wins
+	global pbar
+	pbar.update(1)
 	product, winner, moves = results
 	X.update(product)
 	Y.update(product*len(moves))
@@ -127,10 +133,12 @@ def process_result(results):
 	if winner == "player 1": p1wins += 1
 	if winner == "player 2": p2wins += 1
 def run():
+	global pbar
 	number_cores = int(input("Enter number of cores (0 to use all): "))
 	if number_cores == 0: number_cores = multiprocessing.cpu_count()
 	pool = multiprocessing.Pool(number_cores)
-	number_runs = int(input("Enter number of trials per core: "))
+	number_runs = int(input("Enter number of trials: "))
+	pbar = tqdm(total=number_runs, file=sys.stdout)
 	start = time.time()
 	for _ in range(number_runs):
 		pool.apply_async(get_possible_position_vector, args = (), callback = process_result)
@@ -146,43 +154,5 @@ def run():
 	print("P2 wins: ", p2wins/N)
 	print("Total number of games: ", N)
 	print("Time elapsed: ", time.time()-start)
-
-def run_random_game():
-	board = Connect4Game()
-	moves = []
-	while not board.get_win():
-		move = random.randrange(7)
-		try:
-			board.make_move(move)
-			moves.append(move)
-		except:
-			continue
-	return board
-
-
-def test():
-	wins = []
-	games = []
-	for i in range(100000):
-		if i%100==0: print(i, Counter(wins))
-		temp = run_random_game()
-		wins.append(temp.get_win())
-		games.append(temp)
-	print(Counter(wins))
-
-
-def get_game():
-	game = Connect4Game()
-	while True:
-		try:
-			game.make_move(random.randrange(7))
-		except:
-			break
-	return game
-
-"""
-moves = [3, 3, 0, 2, 4, 3, 5, 2, 1, 2, 1, 6, 4, 4, 2, 4, 3, 5, 1, 3, 1]
-temp = Connect4Game()
-for i in moves:
-	temp.make_move(i)
-"""
+	
+run()
