@@ -1,6 +1,5 @@
 import numpy as np
 import random
-
 # Rotate let and rotate right functions from https://falatic.com/index.php/108/python-and-bitwise-rotation
 def rotate_left(val, r_bits, max_bits=64):
 	return (val << r_bits%max_bits) & (2**max_bits-1) | \
@@ -19,7 +18,7 @@ def bitboard_to_arr(bitboard):
 	return np.flip(np.array([int(i) for i in bin(bitboard)[2:].zfill(63)]).reshape((9,7)).transpose(),axis=1)[:-1,:-2]
 
 # Implementation of bitboard from https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
-FULL_BOARD = 279258638311359
+FULL_BOARD = 558517276622718
 class Connect4Game:
 	def __init__(self):
 		self.bitboards = [0,0]
@@ -37,7 +36,7 @@ class Connect4Game:
 		if (self.bitboards[0] | self.bitboards[1]) & FULL_BOARD == FULL_BOARD: return "tie"
 		return None
 	def make_move(self,col):
-		if not self.get_win():
+		if not self.get_win() and col in self.list_moves():
 			self.heights[col] += 1
 			move = rotate_left(1, self.heights[col])
 			self.bitboards[self.counter % 2] ^= move
@@ -63,12 +62,11 @@ class Connect4Game:
 
 def get_possible_position_vector():
 	game = Connect4Game()
-	while True:
+	while not game.get_win():
 		try:
 			game.make_move(random.randrange(7))
 		except:
 			break
 	return (game.possible_move_vector, game.get_win(), game.moves)
-
-import cProfile
-cProfile.run("[get_possible_position_vector() for i in range(500)]")
+	
+a = [get_possible_position_vector() for i in range(500)]

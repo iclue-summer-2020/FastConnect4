@@ -5,6 +5,7 @@ from statistics import stdev
 from math import sqrt
 import multiprocessing
 import time
+from collections import Counter
 
 product = lambda arr: reduce(lambda a,b: a*b, arr)
 
@@ -71,7 +72,7 @@ class Connect4Game:
 		if (self.bitboards[0] | self.bitboards[1]) & FULL_BOARD == FULL_BOARD: return "tie"
 		return None
 	def make_move(self,col):
-		if not self.get_win():
+		if not self.get_win() and col in self.list_moves():
 			self.heights[col] += 1
 			move = rotate_left(1, self.heights[col])
 			self.bitboards[self.counter % 2] ^= move
@@ -145,8 +146,30 @@ def run():
 	print("P2 wins: ", p2wins/N)
 	print("Total number of games: ", N)
 	print("Time elapsed: ", time.time()-start)
+
+def run_random_game():
+	board = Connect4Game()
+	moves = []
+	while not board.get_win():
+		move = random.randrange(7)
+		try:
+			board.make_move(move)
+			moves.append(move)
+		except:
+			continue
+	return board
+
+
 def test():
-	pass
+	wins = []
+	games = []
+	for i in range(100000):
+		if i%100==0: print(i, Counter(wins))
+		temp = run_random_game()
+		wins.append(temp.get_win())
+		games.append(temp)
+	print(Counter(wins))
+
 
 def get_game():
 	game = Connect4Game()
@@ -162,5 +185,4 @@ moves = [3, 3, 0, 2, 4, 3, 5, 2, 1, 2, 1, 6, 4, 4, 2, 4, 3, 5, 1, 3, 1]
 temp = Connect4Game()
 for i in moves:
 	temp.make_move(i)
-
 """
