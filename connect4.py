@@ -29,17 +29,19 @@ class RandomVariable:
 	def get_error(self):
 		return stdev(self.samples) / len(self.samples) if len(self.samples) > 1 else -1
 # Initialize random variables from https://arxiv.org/pdf/1901.11161.pdf
-X = RandomVariable(100) # used to calculate game tree size
-Y = RandomVariable(100) # used to calculate game length
-Z = RandomVariable(100) # used to calculate draw rate
-P1 = RandomVariable(100) # used to calculate p1 win rate
-P2 = RandomVariable(100) # used to calculate p2 win rate
+X = RandomVariable(1) # used to calculate game tree size
+Y = RandomVariable(1) # used to calculate game length
+Z = RandomVariable(1) # used to calculate draw rate
+P1 = RandomVariable(1) # used to calculate p1 win rate
+P2 = RandomVariable(1) # used to calculate p2 win rate
 N = 0
 temp = 0
 p1wins = 0
 p2wins = 0
+ties = 0
 # Progress bar
 pbar = None
+winners = []
 # Rotate let and rotate right functions from https://falatic.com/index.php/108/python-and-bitwise-rotation
 def rotate_left(val, r_bits, max_bits=64):
 	return (val << r_bits%max_bits) & (2**max_bits-1) | \
@@ -77,12 +79,12 @@ class Connect4Game:
 		return None
 	def make_move(self,col):
 		if not self.get_win() and col in self.list_moves():
+			self.possible_move_vector.append(len(self.list_moves()))
 			self.heights[col] += 1
 			move = rotate_left(1, self.heights[col])
 			self.bitboards[self.counter % 2] ^= move
 			self.moves.append(col)
 			self.counter += 1
-			self.possible_move_vector.append(len(self.list_moves()))
 		else:
 			raise ValueError("game finished!")
 	# We don't need this per se, it's just here for completeness
@@ -104,7 +106,7 @@ def get_possible_position_vector():
 	game = Connect4Game()
 	while True:
 		try:
-			game.make_move(random.randrange(7))
+			game.make_move(random.choice(game.list_moves()))
 		except:
 			break
 	return (product(game.possible_move_vector), game.get_win(), game.moves)
@@ -120,18 +122,23 @@ def process_result(results):
 	global temp
 	global p1wins
 	global p2wins
+	global draws
 	global pbar
+	global ties
+	global winners
 	pbar.update(1)
 	product, winner, moves = results
 	X.update(product)
 	Y.update(product*len(moves))
-	Z.update(product*1 if winner=="tie" else 0)
-	P1.update(product*1 if winner=="player 1" else 0)
-	P2.update(product*1 if winner=="player 2" else 0)
+	Z.update(product if winner=="tie" else 0)
+	P1.update(product if winner=="player 1" else 0)
+	P2.update(product if winner=="player 2" else 0)
 	N += 1
 	temp += len(moves)
 	if winner == "player 1": p1wins += 1
 	if winner == "player 2": p2wins += 1
+	if winner == "tie": ties += 1
+	winners.append(winner)
 def run():
 	global pbar
 	number_cores = int(input("Enter number of cores (0 to use all): "))
@@ -144,7 +151,7 @@ def run():
 		pool.apply_async(get_possible_position_vector, args = (), callback = process_result)
 	pool.close()
 	pool.join()
-	print("Game tree size: ", X.get_mean())
+	print("Game tree size: ", X.get_mean(), " with error ", X.get_error())
 	print("Average game length: ", Y.get_mean() / X.get_mean())
 	print("Draw rate: ", Z.get_mean() / X.get_mean())
 	print("P1 win rate: ", P1.get_mean() / X.get_mean())
@@ -152,7 +159,6 @@ def run():
 	print("Average game length (actual): ", temp/N)
 	print("P1 wins: ", p1wins/N)
 	print("P2 wins: ", p2wins/N)
+	print("Ties: ", ties / N)
 	print("Total number of games: ", N)
 	print("Time elapsed: ", time.time()-start)
-	
-run()
