@@ -42,6 +42,7 @@ ties = 0
 # Progress bar
 pbar = None
 winners = []
+games = []
 # Rotate let and rotate right functions from https://falatic.com/index.php/108/python-and-bitwise-rotation
 def rotate_left(val, r_bits, max_bits=64):
 	return (val << r_bits%max_bits) & (2**max_bits-1) | \
@@ -61,6 +62,7 @@ def bitboard_to_arr(bitboard):
 
 # Implementation of bitboard from https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
 FULL_BOARD = 558517276622718
+FULL_HEIGHTS = [6,13,20,27,34,41,48]
 class Connect4Game:
 	def __init__(self):
 		self.bitboards = [0,0]
@@ -68,6 +70,7 @@ class Connect4Game:
 		self.counter = 0
 		self.moves = []
 		self.possible_move_vector = []
+		self.move_list = [0,1,2,3,4,5,6]
 	def to_arr(self):
 		return bitboard_to_arr(self.bitboards[0]) + 2*bitboard_to_arr(self.bitboards[1])
 	def __str__(self):
@@ -78,19 +81,20 @@ class Connect4Game:
 		if (self.bitboards[0] | self.bitboards[1]) & FULL_BOARD == FULL_BOARD: return "tie"
 		return None
 	def make_move(self,col):
-		if not self.get_win() and col in self.list_moves():
-			self.possible_move_vector.append(len(self.list_moves()))
+		if not self.get_win() and col in self.move_list:
+			self.possible_move_vector.append(len(self.move_list))
 			self.heights[col] += 1
 			move = rotate_left(1, self.heights[col])
 			self.bitboards[self.counter % 2] ^= move
 			self.moves.append(col)
 			self.counter += 1
+			if self.heights[col] == FULL_HEIGHTS[col]: self.move_list.remove(col)
 		else:
 			raise ValueError("game finished!")
 	# We don't need this per se, it's just here for completeness
 	def undo_move(self):
 		self.counter -= 1
-		col = moves[-1]
+		col = self.moves[-1]
 		self.moves.pop()
 		self.heights[col] -= 1
 		move = rotate_left(1, self.heights[col])
@@ -106,8 +110,9 @@ def get_possible_position_vector():
 	game = Connect4Game()
 	while True:
 		try:
-			game.make_move(random.choice(game.list_moves()))
+			game.make_move(random.choice(game.move_list))
 		except:
+			games.append(game)
 			break
 	return (product(game.possible_move_vector), game.get_win(), game.moves)
 
@@ -165,12 +170,11 @@ def run_input():
 	number_runs = int(input("Enter number of trials: "))
 	run(number_cores, number_runs)
 
-def test_run():
+def test():
 	out = 0
 	for i in range(10000):
 		print(i)
 		out += get_possible_position_vector()[0]
 	return out
-random.seed(1337)
-print(test_run())
 
+run_input()
