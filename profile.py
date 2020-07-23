@@ -8,6 +8,7 @@ import time
 from collections import Counter
 from tqdm import tqdm
 import sys
+from memory_profiler import profile
 
 product = lambda arr: reduce(lambda a,b: a*b, arr)
 
@@ -22,9 +23,8 @@ class RandomVariable:
 	def update(self, val):
 		self.N += 1
 		self.total += val
-		if self.sample_rate != 0:
-			if self.N % self.sample_rate == 0:
-				self.samples.append(val)
+		if self.N % self.sample_rate == 0:
+			self.samples.append(val)
 	def get_mean(self):
 		return self.total / self.N
 	def get_error(self):
@@ -43,6 +43,7 @@ ties = 0
 # Progress bar
 pbar = None
 winners = []
+games = []
 # Rotate let and rotate right functions from https://falatic.com/index.php/108/python-and-bitwise-rotation
 def rotate_left(val, r_bits, max_bits=64):
 	return (val << r_bits%max_bits) & (2**max_bits-1) | \
@@ -112,6 +113,7 @@ def get_possible_position_vector():
 		try:
 			game.make_move(random.choice(game.move_list))
 		except:
+			games.append(game)
 			break
 	return (product(game.possible_move_vector), game.get_win(), game.moves)
 
@@ -130,6 +132,7 @@ def process_result(results):
 	global pbar
 	global ties
 	global winners
+	if N%1000==0: print(N)
 	pbar.update(1)
 	product, winner, moves = results
 	X.update(product)
@@ -143,6 +146,7 @@ def process_result(results):
 	if winner == "player 2": p2wins += 1
 	if winner == "tie": ties += 1
 	winners.append(winner)
+@profile
 def run(number_cores, number_runs):
 	global pbar
 	if number_cores == 0: number_cores = multiprocessing.cpu_count()
@@ -171,8 +175,9 @@ def run_input():
 
 def test():
 	out = 0
-	for i in range(100000):
+	for i in range(10000):
 		print(i)
 		out += get_possible_position_vector()[0]
 	return out
 
+test()
