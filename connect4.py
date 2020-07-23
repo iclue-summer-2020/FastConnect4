@@ -140,16 +140,17 @@ def process_result(results):
 	if winner == "player 1": p1wins += 1
 	if winner == "player 2": p2wins += 1
 	if winner == "tie": ties += 1
-def run(number_cores, number_runs):
+def run(number_cores, number_runs, number_batches):
 	global pbar
 	if number_cores == 0: number_cores = multiprocessing.cpu_count()
-	pool = multiprocessing.Pool(number_cores)
-	pbar = tqdm(total=number_runs, file=sys.stdout)
+	pbar = tqdm(total=number_runs*number_batches, file=sys.stdout)
 	start = time.time()
-	for _ in range(number_runs):
-		pool.apply_async(get_possible_position_vector, args = (), callback = process_result)
-	pool.close()
-	pool.join()
+	for batch in range(number_batches):
+		pool = multiprocessing.Pool(number_cores)
+		for _ in range(number_runs):
+			pool.apply_async(get_possible_position_vector, args = (), callback = process_result)
+		pool.close()
+		pool.join()
 	print("Game tree size: ", X.get_mean(), " with error ", X.get_error())
 	print("Average game length: ", Y.get_mean() / X.get_mean())
 	print("Draw rate: ", Z.get_mean() / X.get_mean())
@@ -161,10 +162,12 @@ def run(number_cores, number_runs):
 	print("Ties: ", ties / N)
 	print("Total number of games: ", N)
 	print("Time elapsed: ", time.time()-start)
+
 def run_input():
 	number_cores = int(input("Enter number of cores (0 to use all): "))
-	number_runs = int(input("Enter number of trials: "))
-	run(number_cores, number_runs)
+	number_runs = int(input("Enter number of trials per batch: "))
+	number_batches = int(input("Enter number of batches: "))
+	run(number_cores, number_runs, number_batches)
 
 def test():
 	out = 0
