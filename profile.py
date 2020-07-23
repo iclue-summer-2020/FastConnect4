@@ -30,11 +30,11 @@ class RandomVariable:
 	def get_error(self):
 		return stdev(self.samples) / len(self.samples) if len(self.samples) > 1 else -1
 # Initialize random variables from https://arxiv.org/pdf/1901.11161.pdf
-X = RandomVariable(1) # used to calculate game tree size
-Y = RandomVariable(1) # used to calculate game length
-Z = RandomVariable(1) # used to calculate draw rate
-P1 = RandomVariable(1) # used to calculate p1 win rate
-P2 = RandomVariable(1) # used to calculate p2 win rate
+X = RandomVariable(0) # used to calculate game tree size
+Y = RandomVariable(0) # used to calculate game length
+Z = RandomVariable(0) # used to calculate draw rate
+P1 = RandomVariable(0) # used to calculate p1 win rate
+P2 = RandomVariable(0) # used to calculate p2 win rate
 N = 0
 temp = 0
 p1wins = 0
@@ -43,7 +43,6 @@ ties = 0
 # Progress bar
 pbar = None
 winners = []
-games = []
 # Rotate let and rotate right functions from https://falatic.com/index.php/108/python-and-bitwise-rotation
 def rotate_left(val, r_bits, max_bits=64):
 	return (val << r_bits%max_bits) & (2**max_bits-1) | \
@@ -145,7 +144,6 @@ def process_result(results):
 	if winner == "player 1": p1wins += 1
 	if winner == "player 2": p2wins += 1
 	if winner == "tie": ties += 1
-	winners.append(winner)
 @profile
 def run(number_cores, number_runs):
 	global pbar
