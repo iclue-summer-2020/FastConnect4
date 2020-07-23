@@ -112,7 +112,9 @@ def get_possible_position_vector():
 			game.make_move(random.choice(game.move_list))
 		except:
 			break
-	return (product(game.possible_move_vector), game.get_win(), game.moves)
+	out = (product(game.possible_move_vector), game.get_win(), game.moves)
+	del game
+	return out
 
 
 def process_result(results):
