@@ -8,7 +8,9 @@ import time
 from collections import Counter
 from tqdm import tqdm
 import sys
+import tracemalloc
 
+tracemalloc.start()
 product = lambda arr: reduce(lambda a,b: a*b, arr)
 
 # Class that stores a random variable in the form 1/n \sum_{i=0}^n f(g_i)
@@ -178,7 +180,10 @@ def test():
 		out += get_possible_position_vector()[0]
 	return out
 
-run(0, 5000000, 1)
-from guppy import hpy
-hp = hpy()
-h = hp.heap()
+run(0, 500000, 1)
+snapshot = tracemalloc.take_snapshot()
+top_stats = snapshot.statistics('lineno')
+
+print("[ Top 10 ]")
+for stat in top_stats[:10]:
+    print(stat)
