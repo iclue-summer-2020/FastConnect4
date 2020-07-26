@@ -18,7 +18,7 @@ class RandomVariable:
 		self.N = 0
 		self.total = 0
 		self.samples = []
-		self.sample_rate = int(1./sample_rate)
+		self.sample_rate = int(1./sample_rate) if sample_rate != 0 else 0
 	def update(self, val):
 		self.N += 1
 		self.total += val
@@ -105,7 +105,7 @@ class Connect4Game:
 			if TOP & (rotate_left(1, self.heights[col])) == 0: possible_moves.append(col)
 		return possible_moves
 
-def get_possible_position_vector():
+def get_possible_position_vector(arg):
 	game = Connect4Game()
 	while True:
 		try:
@@ -148,11 +148,16 @@ def run(number_cores, number_runs, number_batches):
 	pbar = tqdm(total=number_runs*number_batches, file=sys.stdout)
 	start = time.time()
 	for batch in range(number_batches):
+		"""
 		pool = multiprocessing.Pool(number_cores)
 		for _ in range(number_runs):
 			pool.apply_async(get_possible_position_vector, args = (), callback = process_result)
 		pool.close()
 		pool.join()
+		"""
+		with multiprocessing.Pool(number_cores) as pool:
+			for result in pool.imap_unordered(get_possible_position_vector, range(number_runs)):
+				process_result(result)
 	print("Game tree size: ", X.get_mean(), " with error ", X.get_error())
 	print("Average game length: ", Y.get_mean() / X.get_mean())
 	print("Draw rate: ", Z.get_mean() / X.get_mean())
