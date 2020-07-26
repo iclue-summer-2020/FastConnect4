@@ -18,7 +18,7 @@ class RandomVariable:
 		self.N = 0
 		self.total = 0
 		self.samples = []
-		self.sample_rate = sample_rate
+		self.sample_rate = int(1./sample_rate)
 	def update(self, val):
 		self.N += 1
 		self.total += val
@@ -30,7 +30,7 @@ class RandomVariable:
 	def get_error(self):
 		return stdev(self.samples) / len(self.samples) if len(self.samples) > 1 else -1
 # Initialize random variables from https://arxiv.org/pdf/1901.11161.pdf
-X = RandomVariable(0) # used to calculate game tree size
+X = RandomVariable(0.00001) # used to calculate game tree size
 Y = RandomVariable(0) # used to calculate game length
 Z = RandomVariable(0) # used to calculate draw rate
 P1 = RandomVariable(0) # used to calculate p1 win rate
